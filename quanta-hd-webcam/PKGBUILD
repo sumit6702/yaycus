@@ -1,0 +1,38 @@
+# Maintainer: YourName <youremail@example.com>
+pkgname=quanta-hd-webcam-dkms
+pkgver=r33.b88d3ec
+pkgrel=1
+pkgdesc="Quanta HD webcam driver module for Acer laptops (0408:4033/0408:4035) - DKMS"
+arch=('x86_64')
+url="https://github.com/fus0g/Quanta-HD-User-Facing-0x0408-0x4035_linux"
+license=('GPL2')
+depends=('dkms' 'git' 'linux-headers')
+makedepends=('make')
+conflicts=('uvcvideo-dkms')
+
+source=("git+https://github.com/fus0g/Quanta-HD-User-Facing-0x0408-0x4035_linux.git")
+sha256sums=('SKIP')
+
+pkgver() {
+  cd "$srcdir/Quanta-HD-User-Facing-0x0408-0x4035_linux"
+  echo "r$(git rev-list --count HEAD).$(git rev-parse --short HEAD)"
+}
+
+package() {
+  local install_dir="${pkgdir}/usr/src/${pkgname}-${pkgver}"
+
+  mkdir -p "$install_dir"
+  cp -r "$srcdir/Quanta-HD-User-Facing-0x0408-0x4035_linux/"* "$install_dir"
+
+  # DKMS expects a dkms.conf file, we'll provide one
+  cat <<EOF > "$install_dir/dkms.conf"
+PACKAGE_NAME="${pkgname}"
+PACKAGE_VERSION="${pkgver}"
+CLEAN="make clean"
+MAKE="make"
+BUILT_MODULE_NAME[0]="uvcvideo"
+DEST_MODULE_LOCATION[0]="/kernel/drivers/media/usb/uvc"
+AUTOINSTALL="yes"
+EOF
+}
+
